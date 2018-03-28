@@ -1,18 +1,17 @@
 package application;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.net.URI;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Base64;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.websocket.*;
 
 import javafx.fxml.FXML;
@@ -66,11 +65,11 @@ public class WebSocketChatStageController {
 		FileChooser fileChooser = new FileChooser();
 		File file = fileChooser.showOpenDialog(new Stage());
 		if(file != null) {
-			ByteBuffer fileToSend = convertToByteBuffer(file);
+			String fileToSend = convertToBase64(file);
 			Message message = new Message("bin");
 			message.setUser(user);
 			message.setText(file.getName());
-			message.setData(fileToSend);
+			message.setBinaryData(fileToSend);
 			encodeAndSend(message);
 		}
 		else {
@@ -88,15 +87,16 @@ public class WebSocketChatStageController {
         if (click.getClickCount() == 2) {
            Integer attachmentIndex = attachmentsListView.getSelectionModel().getSelectedIndex();
            
+           if(attachmentIndex<0) return;
            	FileChooser fileChooser = new FileChooser();
            	fileChooser.setInitialFileName(incomingMessages.get(attachmentIndex).getText());
 	   		File file = fileChooser.showSaveDialog(new Stage());
 	   		if(file != null) {
-	   			FileChannel wChannel;
 				try {
-					wChannel = new FileOutputStream(file).getChannel();
-					wChannel.write(incomingMessages.get(attachmentIndex).getBinaryData());
-		   			wChannel.close();
+					FileOutputStream fileOutputStream = new FileOutputStream(file);
+					byte[] fileContents = Base64.getDecoder().decode(incomingMessages.get(attachmentIndex).getBinaryData());
+					fileOutputStream.write(fileContents);
+					fileOutputStream.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -120,7 +120,7 @@ public class WebSocketChatStageController {
 		messageTextField.setText("");
 	}
 	
-	private ByteBuffer convertToByteBuffer(File file) {
+	private String convertToBase64(File file) {
 		try {
 			
 			Integer fileLength = (int)file.length();
@@ -129,9 +129,8 @@ public class WebSocketChatStageController {
 			fis.read(bytesArray);
 			fis.close();
 			
-			ByteBuffer byteBuffer = ByteBuffer.allocate(fileLength);
-			byteBuffer.put(bytesArray);
-			return byteBuffer;
+			String fileBase64 = Base64.getEncoder().encodeToString(bytesArray);
+			return fileBase64;
 			
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -140,42 +139,33 @@ public class WebSocketChatStageController {
 	}
 	
 	private void encodeAndSend(Message message) {
-		ArrayList<String> listObj = new ArrayList<>();
-		listObj.add(message.getType());
-		listObj.add(message.getUser());
-		listObj.add(message.getText());
+		JsonObjectBuilder objBuilder = Json.createObjectBuilder();
+		objBuilder.add("type", message.getType())
+		.add("user", message.getUser())
+		.add("text", message.getText())
+		.add("timestamp", message.getSentTimestamp());
 		if(message.getType().equals("bin")) {
-			listObj.add(message.getBinaryAsString());
+			objBuilder.add("binary",message.getBinaryData());
 		}
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		try {
-			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-			objectOutputStream.writeObject(listObj);
-			ByteBuffer bytes = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
-			
-			webSocketClient.sendMessage(bytes);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}                    
+		JsonObject jsonMessage = objBuilder.build();
+		webSocketClient.sendMessage(jsonMessage.toString());
 	}
 	
-	private void encodeBackToMessageAndPopulate(ByteBuffer messageString) {
+	private void encodeBackToMessageAndPopulate(String messageString) {
 		try {
-	        ByteArrayInputStream bis = new ByteArrayInputStream(messageString.array());
-	        ObjectInputStream ois = new ObjectInputStream(bis);
-	        @SuppressWarnings("unchecked")
-			ArrayList<String> list = (ArrayList<String>) ois.readObject();
-	        Message message = new Message(list.get(0));
-	        message.setUser(list.get(1));
-	        message.setText(list.get(2));
+	        JsonObject jsonMessage = Json.createReader(new StringReader(messageString)).readObject();
+	        Message message = new Message(jsonMessage.getString("type"));
+	        message.setUser(jsonMessage.getString("user"));
+	        message.setText(jsonMessage.getString("text"));
+	        message.setSentTimestamp(jsonMessage.getString("timestamp"));
 	        
 	        if(message.getType().equals("text")) {
 	        	System.out.println(message.getText());
-	        	chatTextArea.setText(chatTextArea.getText() + message.getUser()+": "+message.getText() + "\n");
+	        	chatTextArea.setText(chatTextArea.getText() + "["+message.getSentTimestamp()+" od "+message.getUser()+"]"+": "+message.getText() + "\n");
 	        }
 	        else if(message.getType().equals("bin")) {
 	        	attachmentsListView.getItems().add(message.getUser()+": "+message.getText());
-	        	message.setBinaryFromString(list.get(3));
+	        	message.setBinaryData(jsonMessage.getString("binary"));
 	        	incomingMessages.add(message);
 	        }
 	         
@@ -203,7 +193,7 @@ public class WebSocketChatStageController {
 		@OnClose public void onClose(CloseReason closeReason) {
 			System.out.println("Connection is closed due to: "+closeReason.getReasonPhrase());
 		}
-		@OnMessage public void onMessage(ByteBuffer message, Session session) {
+		@OnMessage public void onMessage(String message, Session session) {
 			//System.out.println("Message received: "+ message);
 			encodeBackToMessageAndPopulate(message);
 			
@@ -217,10 +207,10 @@ public class WebSocketChatStageController {
 			} catch (DeploymentException | IOException e) { e.printStackTrace(); }
 		}
 		
-		public void sendMessage(ByteBuffer message) {
+		public void sendMessage(String message) {
 			try {
 				//System.out.println("Message sent: " + message);
-				session.getBasicRemote().sendBinary(message);
+				session.getBasicRemote().sendText(message);
 			}
 			catch (IOException ex) {
 				ex.printStackTrace();
