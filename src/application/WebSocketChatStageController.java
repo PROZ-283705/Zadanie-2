@@ -63,7 +63,7 @@ public class WebSocketChatStageController {
 	
 	@FXML private void btnChooseAndSendAttachment_Click() {
 		FileChooser fileChooser = new FileChooser();
-		File file = fileChooser.showOpenDialog(new Stage());
+		File file = fileChooser.showOpenDialog(null);
 		if(file != null) {
 			String fileToSend = convertToBase64(file);
 			Message message = new Message("bin");
@@ -90,7 +90,7 @@ public class WebSocketChatStageController {
            if(attachmentIndex<0) return;
            	FileChooser fileChooser = new FileChooser();
            	fileChooser.setInitialFileName(incomingMessages.get(attachmentIndex).getText());
-	   		File file = fileChooser.showSaveDialog(new Stage());
+	   		File file = fileChooser.showSaveDialog(null);
 	   		if(file != null) {
 				try {
 					FileOutputStream fileOutputStream = new FileOutputStream(file);
@@ -100,14 +100,6 @@ public class WebSocketChatStageController {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-	   		}
-	   		else {
-	   			Alert alert = new Alert(AlertType.WARNING);
-	   			alert.setTitle("Uwaga!");
-	   			alert.setHeaderText(null);
-	   			alert.setContentText("Nie załadowano pliku");
-	
-	   			alert.showAndWait();
 	   		}
         }
     }
@@ -181,7 +173,7 @@ public class WebSocketChatStageController {
 		catch (IOException e) { e.printStackTrace(); }
 	}
 	
-	@ClientEndpoint//(encoders = MessageEncoder.class, decoders = MessageDecoder.class)
+	@ClientEndpoint
 	public class WebSocketClient {
 		private Session session;
 		public WebSocketClient() { connectToWebSocket(); }
