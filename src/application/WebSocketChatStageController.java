@@ -35,7 +35,7 @@ public class WebSocketChatStageController {
 	@FXML Button btnSend;
 	@FXML Button btnChooseAndSendAttachment;
 	
-	private String user;
+	private String user = "user";
 	private WebSocketClient webSocketClient;
 	private ArrayList<Message> incomingMessages;
 	
@@ -69,7 +69,7 @@ public class WebSocketChatStageController {
 				Alert fileTooLarge = new Alert(AlertType.ERROR);
 				fileTooLarge.setTitle("Błąd");
 				fileTooLarge.setHeaderText("Nie udało się wysłać wiadomości");
-				fileTooLarge.setContentText("Wielkość pliku przekracza maksymalny obsługiwany rozmiar (2.5MB) i dlatego nie może on zostać przesłany");
+				fileTooLarge.setContentText("Wielkość pliku przekracza maksymalny obsługiwany rozmiar (2.5MB) i dlatego nie może on zostać przesłany. Aby wymieniać się dużymi plikami, sugerowane jest umieszczenie ich na dysku w chmurze (np. Microsoft OneDrive lub Google Drive) i przesłanie linku do pliku w wiadomości tekstowej.");
 				fileTooLarge.showAndWait();
 				return;
 			}
