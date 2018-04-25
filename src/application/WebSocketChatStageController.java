@@ -25,7 +25,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 public class WebSocketChatStageController {
 	@FXML TextField userTextField;
@@ -65,6 +64,15 @@ public class WebSocketChatStageController {
 		FileChooser fileChooser = new FileChooser();
 		File file = fileChooser.showOpenDialog(null);
 		if(file != null) {
+			if(file.length()>2621440)
+			{
+				Alert fileTooLarge = new Alert(AlertType.ERROR);
+				fileTooLarge.setTitle("Błąd");
+				fileTooLarge.setHeaderText("Nie udało się wysłać wiadomości");
+				fileTooLarge.setContentText("Wielkość pliku przekracza maksymalny obsługiwany rozmiar (2.5MB) i dlatego nie może on zostać przesłany");
+				fileTooLarge.showAndWait();
+				return;
+			}
 			String fileToSend = convertToBase64(file);
 			Message message = new Message("bin");
 			message.setUser(user);
