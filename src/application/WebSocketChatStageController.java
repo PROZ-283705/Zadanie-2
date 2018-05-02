@@ -98,7 +98,6 @@ public class WebSocketChatStageController {
 			fileDownloadPI.setVisible(true);
 			fileUploadLbl.setVisible(true);
 			btnChooseAndSendAttachment.setDisable(true);
-			btnSend.setDisable(true);
 			
 			Task<Void> task = new Task<Void>() {
 				@Override
@@ -109,7 +108,6 @@ public class WebSocketChatStageController {
 				fileDownloadPI.setVisible(false);
 				fileUploadLbl.setVisible(false);
 				btnChooseAndSendAttachment.setDisable(false);
-				btnSend.setDisable(false);
 				currentlySendingFile = false;
 				
 				return null;
@@ -179,15 +177,11 @@ public class WebSocketChatStageController {
 			aFile = new RandomAccessFile(file,"r");
 	        FileChannel inChannel = aFile.getChannel();
 	        ByteBuffer buffer = ByteBuffer.allocate(chunkSize);
-	        long currPart = 0;
 	        while(inChannel.read(buffer) > 0)
 	        {
 	            buffer.flip();
-	            Boolean isLast = false;
-            	if(currPart>=parts) isLast = true;
-                webSocketClient.sendMessage(buffer,isLast);
+                webSocketClient.sendMessage(buffer);
 	            buffer.clear();
-	            currPart++;
 	        }
 	        inChannel.close();
 	        aFile.close();
@@ -197,7 +191,6 @@ public class WebSocketChatStageController {
 	}
 	
 	private void sendTextMessage() {
-		if(currentlySendingFile || currentlyReceivingFile) return;
 		Message message = new Message("text");
 		message.setUser(user);
 		message.setText(messageTextField.getText());
@@ -222,7 +215,6 @@ public class WebSocketChatStageController {
 	        	fileDownloadPI.setVisible(true);
 	        	fileDownloadLbl.setVisible(true);
 				btnChooseAndSendAttachment.setDisable(true);
-				btnSend.setDisable(true);
 	        	message.setFileParts(jsonMessage.getInt("fileParts"));
 	        	incomingMessages.add(message);
 	        	currPartToWrite = 0;
@@ -233,7 +225,7 @@ public class WebSocketChatStageController {
 	    }
 	}
 	
-	private void saveFileToTemp(ByteBuffer data,Boolean isLast) {
+	private void saveFileToTemp(ByteBuffer data) {
 		if(currentlySendingFile || !currentlyReceivingFile) return;
 		
 		Message fileInfo = incomingMessages.get(incomingMessages.size() - 1);
@@ -243,26 +235,15 @@ public class WebSocketChatStageController {
 			aFile.seek(currPartToWrite*chunkSize);
 	        FileChannel inChannel = aFile.getChannel();
 	        inChannel.write(data);
-            if(isLast) { //last chunk of file
+            if(currPartToWrite>=fileInfo.getFileParts()) { //last chunk of file
             	currentlyReceivingFile = false;
             	fileDownloadPI.setVisible(false);
             	fileDownloadLbl.setVisible(false);
     			btnChooseAndSendAttachment.setDisable(false);
-    			btnSend.setDisable(false);
-    			if(currPartToWrite>=fileInfo.getFileParts())
-    				Platform.runLater(() -> {
-    					chatTextArea.setText(chatTextArea.getText() + "["+fileInfo.getSentTimestamp()+" od "+fileInfo.getUser()+"]"+" otrzymałeś plik \""+fileInfo.getText()+"\"\n");
-    					attachmentsListView.getItems().add(fileInfo.getUser()+": "+fileInfo.getText());
-    				});
-    			else {
-    				Platform.runLater(()->{
-    					Alert alert = new Alert(AlertType.ERROR);
-        				alert.setTitle("Błąd!");
-        				alert.setHeaderText("Nie udało się pobrać pliku");
-        				alert.setContentText("Plik nie został poprawnie pobrany. Prawdopodobnie wystąpiły problemy z połączeniem");
-        				alert.showAndWait();
-    				});
-    			}
+    			Platform.runLater(() -> {
+    				chatTextArea.setText(chatTextArea.getText() + "["+fileInfo.getSentTimestamp()+" od "+fileInfo.getUser()+"]"+" otrzymałeś plik \""+fileInfo.getText()+"\"\n");
+    				attachmentsListView.getItems().add(fileInfo.getUser()+": "+fileInfo.getText());
+    			});
             }
 	        currPartToWrite++;
 	        inChannel.close();
@@ -296,10 +277,10 @@ public class WebSocketChatStageController {
 			encodeBackToMessageAndPopulate(message);
 			
 		}
-		@OnMessage public void onMessage(ByteBuffer message,Boolean isLast, Session session) {
+		@OnMessage public void onMessage(ByteBuffer message, Session session) {
 			//System.out.println("Message received: "+ message);
 			//System.out.println("Binary received");
-			saveFileToTemp(message,isLast);
+			saveFileToTemp(message);
 		}
 		
 		private void connectToWebSocket() {
@@ -319,10 +300,10 @@ public class WebSocketChatStageController {
 				ex.printStackTrace();
 			}
 		}
-		public void sendMessage(ByteBuffer message,Boolean isLast) {
+		public void sendMessage(ByteBuffer message) {
 			try {
 				//System.out.println("Binary sent");
-				session.getBasicRemote().sendBinary(message,isLast);
+				session.getBasicRemote().sendBinary(message);
 			}
 			catch (IOException ex) {
 				ex.printStackTrace();
