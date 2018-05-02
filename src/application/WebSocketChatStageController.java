@@ -186,7 +186,7 @@ public class WebSocketChatStageController {
 	            Boolean isLast = false;
             	if(currPart>=parts) isLast = true;
                 webSocketClient.sendMessage(buffer,isLast);
-	            buffer.clear(); // do something with the data and clear/compact it.
+	            buffer.clear();
 	            currPart++;
 	        }
 	        inChannel.close();
