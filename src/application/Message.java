@@ -7,11 +7,12 @@ public class Message {
 	private String user;
 	private String type; //text or bin
 	private String textData;
-	private String binaryData;
 	private String sentTimestamp;
+	private long fileParts;
 	
 	public Message(String type) { 
 		this.type = type;
+		this.fileParts = 0;
 		
 		Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
@@ -26,8 +27,8 @@ public class Message {
 		textData = text;
 	}
 	
-	public void setBinaryData(String binary) {
-		binaryData = binary;
+	public void setFileParts(long parts) {
+		fileParts = parts;
 	}
 	
 	public void setSentTimestamp(String timestamp) {
@@ -49,8 +50,8 @@ public class Message {
 		return textData;
 	}
 	
-	public String getBinaryData() {
-		return binaryData;
+	public long getFileParts() {
+		return fileParts;
 	}
 	
 	public String getSentTimestamp() {

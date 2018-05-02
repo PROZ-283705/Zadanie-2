@@ -3,28 +3,32 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="690.0" prefWidth="782.0" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.WebSocketChatStageController">
+<AnchorPane prefHeight="717.0" prefWidth="832.0" stylesheets="@application.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.WebSocketChatStageController">
    <children>
-      <Label layoutX="14.0" layoutY="14.0" text="Nazwa użytkownika:" />
-      <TextField fx:id="userTextField" Text="user" layoutX="128.0" layoutY="10.0" prefHeight="25.0" prefWidth="581.0" promptText="wpisz swoją nazwę użytkownika" />
-      <Button fx:id="btnSet" layoutX="719.0" layoutY="10.0" mnemonicParsing="false" onAction="#btnSet_Click" text="Ustaw" />
-      <TextArea fx:id="chatTextArea" editable="false" layoutX="128.0" layoutY="44.0" prefHeight="426.0" prefWidth="581.0" />
-      <Label layoutX="25.0" layoutY="479.0" text="Nowa wiadomość:" />
-      <TextField fx:id="messageTextField" layoutX="128.0" layoutY="475.0" onKeyPressed="#messageTextField_KeyPressed" prefHeight="25.0" prefWidth="581.0" />
-      <Button fx:id="btnSend" layoutX="719.0" layoutY="475.0" mnemonicParsing="false" onAction="#btnSend_Click" prefHeight="25.0" prefWidth="49.0" text="Wyślij" />
-      <Label layoutX="68.0" layoutY="563.0" text="Załączniki:" />
-      <ListView fx:id="attachmentsListView" layoutX="128.0" layoutY="509.0" onMouseClicked="#attachmentsListView_doubleClick" prefHeight="141.0" prefWidth="581.0" />
-      <Button fx:id="btnChooseAndSendAttachment" layoutX="561.0" layoutY="650.0" mnemonicParsing="false" onAction="#btnChooseAndSendAttachment_Click" text="Wybierz i wyślij załącznik" />
-      <Label layoutX="53.0" layoutY="249.0" text="Wiadomości:" />
-      <Label layoutX="128.0" layoutY="654.0" text="Aby zapisać załącznik z listy, klinkij na niego dwukrotnie.">
+      <Label layoutX="64.0" layoutY="16.0" text="Nazwa użytkownika:" />
+      <TextField fx:id="userTextField" Text="user" layoutX="178.0" layoutY="12.0" prefHeight="25.0" prefWidth="581.0" promptText="wpisz swoją nazwę użytkownika" />
+      <Button fx:id="btnSet" layoutX="769.0" layoutY="12.0" mnemonicParsing="false" onAction="#btnSet_Click" text="Ustaw" />
+      <TextArea fx:id="chatTextArea" editable="false" layoutX="178.0" layoutY="46.0" prefHeight="426.0" prefWidth="581.0" />
+      <Label layoutX="75.0" layoutY="481.0" text="Nowa wiadomość:" />
+      <TextField fx:id="messageTextField" layoutX="178.0" layoutY="477.0" onKeyPressed="#messageTextField_KeyPressed" prefHeight="25.0" prefWidth="581.0" />
+      <Button fx:id="btnSend" layoutX="769.0" layoutY="477.0" mnemonicParsing="false" onAction="#btnSend_Click" prefHeight="25.0" prefWidth="49.0" text="Wyślij" />
+      <Label layoutX="118.0" layoutY="565.0" text="Załączniki:" />
+      <ListView fx:id="attachmentsListView" layoutX="178.0" layoutY="511.0" onMouseClicked="#attachmentsListView_doubleClick" prefHeight="141.0" prefWidth="581.0" />
+      <Button fx:id="btnChooseAndSendAttachment" layoutX="611.0" layoutY="652.0" mnemonicParsing="false" onAction="#btnChooseAndSendAttachment_Click" text="Wybierz i wyślij załącznik" />
+      <Label layoutX="103.0" layoutY="251.0" text="Wiadomości:" />
+      <Label layoutX="178.0" layoutY="656.0" text="Aby zapisać załącznik z listy, klinkij na niego dwukrotnie.">
          <font>
             <Font name="System Italic" size="12.0" />
          </font>
       </Label>
+      <Label fx:id="fileDownloadLbl" layoutX="214.0" layoutY="685.0" text="Pobieranie pliku od innego użytkownika" />
+      <ProgressIndicator fx:id="fileDownloadPI" layoutX="178.0" layoutY="677.0" prefHeight="33.0" prefWidth="29.0" />
+      <Label fx:id="fileUploadLbl" layoutX="214.0" layoutY="685.0" text="Wysyłanie pliku" />
    </children>
 </AnchorPane>
